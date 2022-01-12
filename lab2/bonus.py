@@ -2,6 +2,10 @@ from allpairspy import AllPairs
 
 
 def get_level_coefficient(level: int):
+    if type(level) != int:
+        raise TypeError("Неверный тип")
+    if level < 7 or level > 17:
+        raise ValueError("Неверный уровень инженера")
     if level < 10:
         coefficient = 1.05
     elif 10 <= level < 13:
@@ -14,6 +18,8 @@ def get_level_coefficient(level: int):
 
 
 def get_performance_coefficient(performance_review):
+    if performance_review < 1 or performance_review > 5:
+        raise ValueError("Неверный Performance Review")
     if performance_review < 2:
         coefficient = 0
     elif 2 <= performance_review < 2.5:
@@ -29,17 +35,15 @@ def get_performance_coefficient(performance_review):
     return coefficient
 
 
-def calculation_bonus(salary: int, performance_review, level: int):
-    if not salary or not performance_review or not level:
-        raise ValueError("Нет одного или нескольких параметорв")
-    if type(salary) != int or type(level) != int:
-        raise ValueError("Некорректное значение")
+def chek_salary(salary: int):
+    if type(salary) != int:
+        raise TypeError("Неверный тип")
     if salary < 70000 or salary > 750000:
         raise ValueError("Неверна зарплата")
-    if performance_review < 1 or performance_review > 5:
-        raise ValueError("Неверный Performance Review")
-    if level < 7 or level > 17:
-        raise ValueError("Неверный уровень инженера")
+
+
+def calculation_bonus(salary: int, performance_review, level: int):
+    chek_salary(salary)
     return round(salary * get_performance_coefficient(performance_review) * get_level_coefficient(level), 2)
 
 

@@ -1,57 +1,109 @@
 import pytest
 import bonus
+from allpairspy import AllPairs
+
+salaries = list(range(68000, 751001, 1000))
+levels = list(range(6, 19))
+perf_results = list(round(x * 1.0, 1) for x in range(1, 5))
+parameters = [salaries, levels, perf_results]
+
+for parameter in parameters:
+    parameter.extend(["text", None])
+
+pair_for_test = [pair for pair in AllPairs(parameters)]
 
 
 @pytest.mark.parametrize(
-    "salary, performance_review, level, error, result",
+    "salary, expected_error",
     [
-        (60000, 0.5, 7, ValueError, 0),
-        (70000, 1, 7, None, 0),
-        (100000, 2, 7, None, 26250.0),
-        (750000, 2.5, 7, None, 393750),
-        (800000, 3, 7, ValueError, 0),
-        (800000, 3.5, 11, ValueError, 0),
-        (750000, 5, 11, None, 1650000.0),
-        (100000, 6, 11, ValueError, 0),
-        (70000, 6, 14, ValueError, 0),
-        (60000, 5, 14, ValueError, 0),
-        (60000, 3.5, 17, ValueError, 0),
-        (70000, 3, 11, None, 77000.0),
-        (100000, 2.5, 14, None, 57500.0),
-        (750000, 0.5, 14, ValueError, 0),
-        (800000, 1, 14, ValueError, 0),
-        (800000, 2, 17, ValueError, 0),
-        (750000, 2, 19, ValueError, 0),
-        (100000, 1, 17, None, 0),
-        (70000, 3.5, 19, ValueError, 0),
-        (60000, 2.5, 11, ValueError, 0),
-        (60000, 3, 19, ValueError, 0),
-        (70000, 0.5, 17, ValueError, 0),
-        (100000, 5, 19, ValueError, 0),
-        (750000, 6, 17, ValueError, 0),
-        (800000, 6, 19, ValueError, 0),
-        (800000, 5, 7, ValueError, 0),
-        (750000, 3, 17, None, 900000.0),
-        (100000, 3.5, 7, None, 157500.0),
-        (70000, 2.5, 17, None, 42000.0),
-        (60000, 2, 14, ValueError, 0),
-        (60000, 1, 11, ValueError, 0),
-        (70000, 2, 11, None, 19250.0),
-        (100000, 0.5, 11, ValueError, 0),
-        (750000, 1, 19, ValueError, 0),
-        (800000, 0.5, 19, ValueError, 0),
-        (800000, 2.5, 19, ValueError, 0),
-        (750000, 3.5, 14, None, 1293750.0),
-        (100000, 3, 14, None, 115000.0),
-        (70000, 5, 17, None, 168000.0),
-        (60000, 6, 7, ValueError, 0)
-    ],
+        (50000, ValueError),
+        (80000.5, TypeError),
+        (800000, ValueError),
+        ("text", TypeError),
+        (None, TypeError)
+    ]
 )
-def test_calculation_bonus(salary, performance_review, level, error, result):
-    res = 0
-    if error is not None:
-        with pytest.raises(error):
-            res = bonus.calculation_bonus(salary, performance_review, level),
-    else:
-        res = bonus.calculation_bonus(salary, performance_review, level)
-    assert res == result
+def test_chek_salary_error(salary, expected_error):
+    with pytest.raises(expected_error):
+        bonus.chek_salary(salary)
+
+
+@pytest.mark.parametrize(
+    "salary, expected_result",
+    [
+        (75000, None),
+        (500000, None),
+        (750000, None),
+    ]
+)
+def test_chek_salary(salary, expected_result):
+    assert bonus.chek_salary(salary) == expected_result
+
+
+@pytest.mark.parametrize(
+    "performance_review, expected_result",
+    [
+        (1, 0),
+        (2, 0.25),
+        (2.5, 0.5),
+        (3, 1),
+        (3.5, 1.5),
+        (5, 2),
+    ]
+)
+def test_get_performance_coefficient(performance_review, expected_result):
+    assert bonus.get_performance_coefficient(performance_review) == expected_result
+
+
+@pytest.mark.parametrize(
+    "performance_review, expected_error",
+    [
+        (0, ValueError),
+        (6, ValueError),
+        ("text", TypeError),
+        (None, TypeError)
+    ]
+)
+def test_get_performance_coefficient_error(performance_review, expected_error):
+    with pytest.raises(expected_error):
+        bonus.get_performance_coefficient(performance_review)
+
+
+@pytest.mark.parametrize(
+    "level, expected_result",
+    [
+        (7, 1.05),
+        (10, 1.1),
+        (13, 1.15),
+        (17, 1.2)
+    ]
+)
+def test_get_level_coefficient(level, expected_result):
+    assert bonus.get_level_coefficient(level) == expected_result
+
+
+@pytest.mark.parametrize(
+    "level, expected_error",
+    [
+        (6, ValueError),
+        (18, ValueError),
+        ("text", TypeError),
+        (None, TypeError)
+    ]
+)
+def test_get_level_coefficient(level, expected_error):
+    with pytest.raises(expected_error):
+        bonus.get_level_coefficient(level)
+
+
+@pytest.mark.parametrize(
+    "salary, performance_review, level",
+    pair_for_test,
+)
+def test_calculation_bonus(salary, performance_review, level):
+    errors = (ValueError, TypeError)
+    try:
+        with pytest.raises(errors):
+            bonus.calculation_bonus(salary, performance_review, level)
+    except:
+        assert bonus.calculation_bonus(salary, performance_review, level) not in errors
